@@ -1,20 +1,22 @@
 CC = gcc
 CFLAGS = -O2 -Wall -Wextra -Werror
-CLIBS = -lm
-EXE = db_project
-OBJ = obj/
-SRC = src/
+LDFLAGS = -lm
+OBJ_DIR = obj
+SRC_DIR = src
+TARGET = test
 
-$(OBJ)main.o: $(SRC)main.c
-	$(CC) $(CFLAGS) -o $@ -c $<
+SOURCES = $(SRC_DIR)/main.c $(SRC_DIR)/repl.c
+OBJECTS = $(SOURCES:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
-$(OBJ)repl.o: $(SRC)repl.c
-	$(CC) $(CFLAGS) -o $@ -c $<
+all: $(TARGET)
 
-$(EXE): $(OBJ)main.o $(OBJ)repl.o
-	$(CC) $(CFLAGS) -o $(EXE) $^ $(CLIBS)
+$(TARGET): $(OBJECTS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	mkdir -p $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -rf $(OBJ)*.o
-	rm -rf $(EXE)
+	rm -rf $(OBJ_DIR) $(TARGET)
 
