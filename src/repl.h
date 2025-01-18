@@ -22,6 +22,20 @@ typedef enum {
 } StatementType;
 
 // Structs
+#define TABLE_MAX_ROWS 10
+
+typedef struct {
+    int id;
+    char name[32];
+} Row;
+
+typedef struct {
+    Row rows[TABLE_MAX_ROWS];
+    size_t num_rows;
+} Table;
+
+Table* new_table(void);
+
 typedef struct {
   char* buffer;
   size_t buffer_length;
@@ -30,6 +44,7 @@ typedef struct {
 
 typedef struct {
   StatementType type;
+  Row insert_row;
 } Statement;
 
 // Function declarations
@@ -39,7 +54,7 @@ void read_input(InputBuffer* input_buffer);
 void close_input_buffer(InputBuffer* input_buffer);
 MetaCommandResult do_meta_command(InputBuffer* input_buffer);
 PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement);
-void execute_statement(Statement* statement);
+void execute_statement(Statement* statement, Table* table);
 void repl(void);
 
 #endif

@@ -52,6 +52,19 @@ PrepareResult prepare_statement(InputBuffer* input_buffer,
 
   if (strncmp(input_buffer->buffer, "insert", 6) == 0) {
     statement->type = STATEMENT_INSERT;
+
+    int id;
+    char name[32];
+    int args_assigned = sscanf(input_buffer->buffer, "insert %d %31s", &id, name);
+    if (args_assigned < 2) {
+      return PREPARE_UNRECOGNIZED_STATEMENT;
+    }
+
+    // Remplir les champs de statement
+    statement->insert_row.id = id;
+    strncpy(statement->insert_row.name, name, sizeof(statement->insert_row.name) - 1);
+    statement->insert_row.name[sizeof(statement->insert_row.name) - 1] = '\0'; // Null-terminate
+
     return PREPARE_SUCCESS;
   }
   if (strcmp(input_buffer->buffer, "select") == 0) {
@@ -62,13 +75,28 @@ PrepareResult prepare_statement(InputBuffer* input_buffer,
   return PREPARE_UNRECOGNIZED_STATEMENT;
 }
 
-void execute_statement(Statement* statement) {
+void execute_statement(Statement* statement, Table* table) {
   switch (statement->type) {
     case (STATEMENT_INSERT):
     //TODO Implement the command here
+      if (table->num_rows >= TABLE_MAX_ROWS) {
+        printf("La table est pleine!\n");
+        return;
+      }
+
+      // Ajouter la ligne à la table
+      Row* row = &(table->rows[table->num_rows]);
+      *row = statement->insert_row; // Copie des données de la déclaration vers la table
+      table->num_rows++;
+
+      printf("Ligne insérée avec sucès. Nombre total de lignes: %zu\n", table->num_rows);
       break;
     case (STATEMENT_SELECT):
-      //TODO implement the command here 
+      //TODO implement the command here
+      for (size_t i = 0; i < table->num_rows; i++) {
+        Row* row = &(table->rows[i]);
+        printf("ID: %d, Nom: %s\n", row->id, row->name);
+      } 
       break;
   }
 }
@@ -76,6 +104,7 @@ void execute_statement(Statement* statement) {
 
 void repl(void){
   InputBuffer* input_buffer = new_input_buffer();
+  Table* table = new_table();
   while (true) {
     print_prompt();
     read_input(input_buffer);
@@ -98,7 +127,22 @@ void repl(void){
                input_buffer->buffer);
         continue;
     }
-     execute_statement(&statement);
+     execute_statement(&statement, table);
      printf("Executed.\n");
   }
 }
+
+Table* new_table() {
+  Table* table = (Table*)malloc(sizeof(Table));
+  if (table == NULL) {
+        fprintf(stderr, "Error: Could not allocate memory for table.\n");
+        exit(EXIT_FAILURE);
+    }     
+  table->num_rows = 0;
+  return table;
+}
+
+void free_table(Table* table) {
+  free(table);
+}
+
