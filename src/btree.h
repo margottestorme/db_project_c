@@ -2,11 +2,7 @@
 #define BTREE_H
 
 #include <stddef.h>
-
-typedef struct {
-    int id;
-    char name[100];
-} Row;
+#include "row.h"
 
 typedef struct Node {
     Row data;          

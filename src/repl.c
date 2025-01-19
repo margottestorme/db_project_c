@@ -1,4 +1,5 @@
 #include "repl.h"
+#include "btree.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -155,25 +156,24 @@ void execute_statement(Statement* statement, Table* table) {
   switch (statement->type) {
     case (STATEMENT_INSERT):
     //TODO Implement the command here
-      if (table->num_rows >= TABLE_MAX_ROWS) {
-        printf("La table est pleine!\n");
+      if (table->tree == NULL) {
+        printf("Erreur : Arbre binaire non initialisé pour cette table.\n");
         return;
       }
 
-      // Ajouter la ligne à la table
-      Row* row = &(table->rows[table->num_rows]);
-      *row = statement->insert_row; // Copie des données de la déclaration vers la table
-      table->num_rows++;
-
-      printf("Ligne insérée avec sucès. Nombre total de lignes: %zu\n", table->num_rows);
+      insert_into_tree(table->tree, statement->insert_row);
+      printf("Ligne insérée : ID=%d, Nom=%s\n", statement->insert_row.id, statement->insert_row.name);
       break;
     case (STATEMENT_SELECT):
       //TODO implement the command here
-      for (size_t i = 0; i < table->num_rows; i++) {
-        Row* row = &(table->rows[i]);
-        printf("ID: %d, Nom: %s\n", row->id, row->name);
+      if (table->tree == NULL) {
+        printf("Erreur : Arbre binaire non initialisé pour cette table.\n");
+        return;
       } 
-      break;
+
+      printf("Contenu de la table (arbre binaire) :\n");
+      print_tree(table->tree);
+      break;     
   }
 }
 
@@ -228,11 +228,13 @@ Table* new_table() {
         fprintf(stderr, "Error: Could not allocate memory for table.\n");
         exit(EXIT_FAILURE);
     }     
-  table->num_rows = 0;
+  table->tree = new_binary_tree();
   return table;
 }
 
 void free_table(Table* table) {
-  free(table);
+    if (table->tree != NULL) {
+        delete_binary_tree(table->tree);
+    }
+    free(table);
 }
-

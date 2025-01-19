@@ -5,7 +5,7 @@ OBJ_DIR = obj
 SRC_DIR = src
 TARGET = test
 
-SOURCES = $(SRC_DIR)/main.c $(SRC_DIR)/repl.c
+SOURCES = $(SRC_DIR)/main.c $(SRC_DIR)/repl.c $(SRC_DIR)/btree.c
 OBJECTS = $(SOURCES:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
 all: $(TARGET)

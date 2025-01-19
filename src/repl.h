@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <sys/types.h>
+#include "row.h"
+#include "btree.h"
 
 // Enums
 typedef enum {
@@ -25,13 +27,7 @@ typedef enum {
 #define TABLE_MAX_ROWS 10
 
 typedef struct {
-    int id;
-    char name[32];
-} Row;
-
-typedef struct {
-    Row rows[TABLE_MAX_ROWS];
-    size_t num_rows;
+    BinaryTree* tree;
 } Table;
 
 Table* new_table(void);
