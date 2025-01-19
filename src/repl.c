@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 InputBuffer* new_input_buffer() {
   InputBuffer* input_buffer = (InputBuffer*)malloc(sizeof(InputBuffer));
   input_buffer->buffer = NULL;
@@ -47,10 +48,65 @@ MetaCommandResult do_meta_command(InputBuffer* input_buffer) {
   }
 }
 
-PrepareResult prepare_statement(InputBuffer* input_buffer,
-                                Statement* statement) {
+Table* find_table(Database* db, const char* name) {
+  for (size_t i = 0; i < db->num_tables; i++) {
+    if (strcmp(db->table_names[i], name) == 0) {
+      return db->tables[i];
+    }
+  }
+  return NULL;
+}
+
+PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement, Database* db) {
+  if (strncmp(input_buffer->buffer, "create table", 12) == 0) {
+    char table_name[32];
+    if (sscanf(input_buffer->buffer, "create table %31s", table_name) != 1) {
+      return PREPARE_UNRECOGNIZED_STATEMENT;
+    }
+
+    if (db->num_tables >= 32) {
+      printf("Erreur : Nombre maximum de tables atteint.\n");
+      return PREPARE_UNRECOGNIZED_STATEMENT;
+    }
+
+    if (find_table(db, table_name) != NULL) {
+      printf("Erreur : Une table avec ce nom existe déjà.\n");
+      return PREPARE_UNRECOGNIZED_STATEMENT;
+    }
+
+    Table* new_table_instance = new_table();
+    db->tables[db->num_tables] = new_table_instance;
+    strncpy(db->table_names[db->num_tables], table_name, 31);
+    db->table_names[db->num_tables][31] = '\0';
+    db->num_tables++;
+
+    printf("Table '%s' créée avec succès.\n", table_name);
+    return PREPARE_SUCCESS;
+  }
+
+  if (strncmp(input_buffer->buffer, "use", 3) == 0) {
+    char table_name[32];
+    if (sscanf(input_buffer->buffer, "use %31s", table_name) != 1) {
+      return PREPARE_UNRECOGNIZED_STATEMENT;
+    }
+
+    Table* table = find_table(db, table_name);
+    if (table == NULL) {
+      printf("Erreur : Table '%s' introuvable.\n", table_name);
+      return PREPARE_UNRECOGNIZED_STATEMENT;
+    }
+
+    db->active_table = table;
+    printf("Table active : '%s'.\n", table_name);
+    return PREPARE_SUCCESS;
+  }
 
   if (strncmp(input_buffer->buffer, "insert", 6) == 0) {
+    if (db->active_table == NULL) {
+      printf("Erreur : Aucune table active. Utilisez 'use <nom_table>'.\n");
+      return PREPARE_UNRECOGNIZED_STATEMENT;
+    }
+
     statement->type = STATEMENT_INSERT;
 
     int id;
@@ -60,20 +116,29 @@ PrepareResult prepare_statement(InputBuffer* input_buffer,
       return PREPARE_UNRECOGNIZED_STATEMENT;
     }
 
-    // Remplir les champs de statement
     statement->insert_row.id = id;
     strncpy(statement->insert_row.name, name, sizeof(statement->insert_row.name) - 1);
-    statement->insert_row.name[sizeof(statement->insert_row.name) - 1] = '\0'; // Null-terminate
+    statement->insert_row.name[sizeof(statement->insert_row.name) - 1] = '\0';
 
     return PREPARE_SUCCESS;
   }
+
   if (strcmp(input_buffer->buffer, "select") == 0) {
+    if (db->active_table == NULL) {
+      printf("Erreur : Aucune table active. Utilisez 'use <nom_table>'.\n");
+      return PREPARE_UNRECOGNIZED_STATEMENT;
+    }
+
     statement->type = STATEMENT_SELECT;
     return PREPARE_SUCCESS;
   }
 
   return PREPARE_UNRECOGNIZED_STATEMENT;
 }
+
+
+
+
 
 void execute_statement(Statement* statement, Table* table) {
   switch (statement->type) {
@@ -101,10 +166,22 @@ void execute_statement(Statement* statement, Table* table) {
   }
 }
 
+Database* new_database() {
+  Database* db = (Database*)malloc(sizeof(Database));
+  if (db == NULL) {
+    fprintf(stderr, "Erreur : Impossible d'allouer la mémoire pour la base de données.\n");
+    exit(EXIT_FAILURE);
+  }
+  db->num_tables = 0;
+  db->active_table = NULL;
+  return db;
+}
+
 
 void repl(void){
   InputBuffer* input_buffer = new_input_buffer();
-  Table* table = new_table();
+  Database* db = new_database();
+
   while (true) {
     print_prompt();
     read_input(input_buffer);
@@ -118,7 +195,7 @@ void repl(void){
       }
     }
     Statement statement;
-    switch (prepare_statement(input_buffer, &statement)) {
+    switch (prepare_statement(input_buffer, &statement, db)) {
       case (PREPARE_SUCCESS):
         printf("recognized statement\n");
         break;
@@ -127,8 +204,10 @@ void repl(void){
                input_buffer->buffer);
         continue;
     }
-     execute_statement(&statement, table);
-     printf("Executed.\n");
+    if (db->active_table != NULL) {
+      execute_statement(&statement, db->active_table);
+      printf("Executed.\n");
+    }
   }
 }
 
