@@ -38,11 +38,21 @@ void close_input_buffer(InputBuffer* input_buffer) {
 }
 
 
-MetaCommandResult do_meta_command(InputBuffer* input_buffer) {
+MetaCommandResult do_meta_command(InputBuffer* input_buffer, Database* db) {
   if (strcmp(input_buffer->buffer, ".exit") == 0) {
     close_input_buffer(input_buffer);
     exit(EXIT_SUCCESS);
-  } else {
+  } 
+  if (strcmp(input_buffer->buffer, ".status") == 0) {
+    if (db->active_table != NULL) {
+        printf("Table active : '%s'\n", db->active_table_name);
+    } else {
+        printf("Aucune table active.\n");
+    }
+    printf("Nombre total de tables : %zu\n", db->num_tables);
+    return META_COMMAND_SUCCESS;
+  } 
+  else {
     //TODO  here implement handling of other input as .exit
     return META_COMMAND_UNRECOGNIZED_COMMAND;
   }
@@ -97,6 +107,7 @@ PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement,
     }
 
     db->active_table = table;
+    strncpy(db->active_table_name, table_name, sizeof(db->active_table_name));
     printf("Table active : '%s'.\n", table_name);
     return PREPARE_SUCCESS;
   }
@@ -186,7 +197,7 @@ void repl(void){
     print_prompt();
     read_input(input_buffer);
     if (input_buffer->buffer[0] == '.') {
-      switch (do_meta_command(input_buffer)) {
+      switch (do_meta_command(input_buffer, db)) {
         case (META_COMMAND_SUCCESS):
           continue;
         case (META_COMMAND_UNRECOGNIZED_COMMAND):

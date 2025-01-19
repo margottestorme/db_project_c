@@ -42,6 +42,7 @@ typedef struct {
     char table_names[32][32];
     size_t num_tables;
     Table* active_table;
+    char active_table_name[32];
 } Database;
 
 typedef struct {
@@ -60,7 +61,7 @@ InputBuffer* new_input_buffer(void);
 void print_prompt(void);
 void read_input(InputBuffer* input_buffer);
 void close_input_buffer(InputBuffer* input_buffer);
-MetaCommandResult do_meta_command(InputBuffer* input_buffer);
+MetaCommandResult do_meta_command(InputBuffer* input_buffer, Database* db);
 PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement, Database* db);
 void execute_statement(Statement* statement, Table* table);
 void repl(void);
