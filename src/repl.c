@@ -38,9 +38,34 @@ void close_input_buffer(InputBuffer* input_buffer) {
     free(input_buffer);
 }
 
+void save_table_to_file(Table* table, const char* table_name) {
+    if (table == NULL || table->tree == NULL) {
+        fprintf(stderr, "Erreur : Table ou arbre binaire invalide.\n");
+        return;
+    }
+
+    // Creation du nom de fichier
+    char filename[64];
+    snprintf(filename, sizeof(filename), "%s.txt", table_name);
+
+    FILE* file = fopen(filename, "w");
+    if (file == NULL) {
+        fprintf(stderr, "Erreur : Impossible de créer le fichier %s.\n", filename);
+        return;
+    }
+
+    fprintf(file, "ID Nom\n");
+    write_tree_to_file(file, table->tree->root);
+    fclose(file);
+
+    printf("Table '%s' enregistrée dans le fichier '%s'.\n", table_name, filename);
+}
 
 MetaCommandResult do_meta_command(InputBuffer* input_buffer, Database* db) {
   if (strcmp(input_buffer->buffer, ".exit") == 0) {
+    for (size_t i = 0; i < db->num_tables; i++) {
+        save_table_to_file(db->tables[i], db->table_names[i]);
+    }
     close_input_buffer(input_buffer);
     exit(EXIT_SUCCESS);
   } 
@@ -68,6 +93,30 @@ Table* find_table(Database* db, const char* name) {
   return NULL;
 }
 
+void load_table_from_file(Table* table, const char* table_name) {
+    char filename[64];
+    snprintf(filename, sizeof(filename), "%s.txt", table_name);
+
+    FILE* file = fopen(filename, "r");
+    if (file == NULL) {
+        printf("Aucun fichier trouvé pour la table '%s'.\n", table_name);
+        return;
+    }
+
+    char line[128];
+    fgets(line, sizeof(line), file); 
+
+    while (fgets(line, sizeof(line), file)) {
+        Row row;
+        if (sscanf(line, "%d,%31s", &row.id, row.name) == 2) {
+            insert_into_tree(table->tree, row); // Insère chaque ligne dans l'arbre binaire
+        }
+    }
+
+    fclose(file);
+    printf("Table '%s' chargée depuis le fichier '%s'.\n", table_name, filename);
+}
+
 PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement, Database* db) {
   if (strncmp(input_buffer->buffer, "create table", 12) == 0) {
     char table_name[32];
@@ -91,7 +140,9 @@ PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement,
     db->table_names[db->num_tables][31] = '\0';
     db->num_tables++;
 
-    printf("Table '%s' créée avec succès.\n", table_name);
+    save_table_to_file(new_table_instance, table_name);
+    printf("Table '%s' sauvegardée et crée avec succès\n", table_name);
+
     return PREPARE_SUCCESS;
   }
 
@@ -109,6 +160,7 @@ PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement,
 
     db->active_table = table;
     strncpy(db->active_table_name, table_name, sizeof(db->active_table_name));
+    load_table_from_file(table, table_name);
     printf("Table active : '%s'.\n", table_name);
     return PREPARE_SUCCESS;
   }
@@ -238,3 +290,4 @@ void free_table(Table* table) {
     }
     free(table);
 }
+

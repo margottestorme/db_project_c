@@ -1,6 +1,7 @@
 #ifndef BTREE_H
 #define BTREE_H
 
+#include <stdio.h>
 #include <stddef.h>
 #include "row.h"
 
@@ -24,6 +25,7 @@ void insert_into_tree(BinaryTree* tree, Row data);
 Row* search_tree(BinaryTree* tree, int id);
 void delete_from_tree(BinaryTree* tree, int id);
 void print_tree(BinaryTree* tree);
+void write_tree_to_file(FILE* file, Node* node);
 
 #endif
 

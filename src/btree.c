@@ -127,3 +127,12 @@ void print_tree(BinaryTree* tree) {
     in_order_traversal(tree->root);
 }
 
+
+// Écrit les données de l'arbre binaire dans un fichier en parcours en ordre
+void write_tree_to_file(FILE* file, Node* node) {
+    if (node == NULL) return;
+    write_tree_to_file(file, node->left);
+    fprintf(file, "%d,%s\n", node->data.id, node->data.name);
+    write_tree_to_file(file, node->right);
+}
+
