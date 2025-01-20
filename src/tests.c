@@ -42,6 +42,8 @@ void test_prepare_statement() {
     free_database(db);
 }
 
+
+
 void test_execute_statement() {
     Table* table = new_table();
     Statement statement;
@@ -87,7 +89,7 @@ void test_binary_tree() {
     insert_into_tree(tree, row1);
     insert_into_tree(tree, row2);
     insert_into_tree(tree, row3);
-    printf("Test insertion\n");
+    printf("insertion dans btree :\n");
     print_tree(tree);
 
     // Vérification des insertions
@@ -95,11 +97,9 @@ void test_binary_tree() {
     assert(search_tree(tree, 1) != NULL);
     assert(search_tree(tree, 2) != NULL);
     assert(search_tree(tree, 3) != NULL);
-    printf("Test recherche dans l'arbre\n");
 
     // Recherche d'un élément inexistant
     assert(search_tree(tree, 4) == NULL);
- 
 
     // Suppression d'un élément
     delete_from_tree(tree, 2);
@@ -111,12 +111,13 @@ void test_binary_tree() {
     assert(search_tree(tree, 3) != NULL);
 
     // Test du parcours et de l'affichage
-    printf("btree après suppression  :\n");
+    printf("Arbre après suppression (parcours en ordre) :\n");
     print_tree(tree);
 
     delete_binary_tree(tree);
-    printf("Test du binary tree ok\n");
+    printf("Test du binary tree terminé\n");
 }
+
 
 int main() {
     test_prepare_statement();
@@ -125,4 +126,3 @@ int main() {
     printf("Ca marche!\n");
     return 0;
 }
-
