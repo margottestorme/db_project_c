@@ -208,12 +208,18 @@ void execute_statement(Statement* statement, Table* table) {
   switch (statement->type) {
     case (STATEMENT_INSERT):
     //TODO Implement the command here
+      if (table->num_rows >= TABLE_MAX_ROWS) {
+        printf("Erreur : Nombre maximum de lignes atteint pour cette table.\n");
+        return;
+      }
+
       if (table->tree == NULL) {
         printf("Erreur : Arbre binaire non initialisé pour cette table.\n");
         return;
       }
 
       insert_into_tree(table->tree, statement->insert_row);
+      table->num_rows++;
       printf("Ligne insérée : ID=%d, Nom=%s\n", statement->insert_row.id, statement->insert_row.name);
       break;
     case (STATEMENT_SELECT):
@@ -240,6 +246,12 @@ Database* new_database() {
   return db;
 }
 
+void free_database(Database* db) {
+    for (size_t i = 0; i < db->num_tables; i++) {
+        free_table(db->tables[i]);
+    }
+    free(db);
+}
 
 void repl(void){
   InputBuffer* input_buffer = new_input_buffer();
@@ -280,6 +292,7 @@ Table* new_table() {
         fprintf(stderr, "Error: Could not allocate memory for table.\n");
         exit(EXIT_FAILURE);
     }     
+  table->num_rows = 0;
   table->tree = new_binary_tree();
   return table;
 }

@@ -27,6 +27,8 @@ typedef enum {
 #define TABLE_MAX_ROWS 10
 
 typedef struct {
+    Row rows[TABLE_MAX_ROWS];
+    size_t num_rows;
     BinaryTree* tree;
 } Table;
 
@@ -40,6 +42,8 @@ typedef struct {
     Table* active_table;
     char active_table_name[32];
 } Database;
+
+Database* new_database(void);
 
 typedef struct {
   char* buffer;
@@ -62,6 +66,7 @@ PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement,
 void execute_statement(Statement* statement, Table* table);
 void repl(void);
 void free_table(Table* table);
+void free_database(Database* db);
 
 #endif
 

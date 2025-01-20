@@ -64,21 +64,29 @@ void insert_into_tree(BinaryTree* tree, Row data) {
 // Recherche dans l'arbre
 Row* search_node(Node* node, int id) {
     if (node == NULL) {
+        printf("Recherche de l'ID %d : nœud actuel NULL, ID non trouvé.\n", id);
         return NULL;
     }
 
+    printf("Recherche de l'ID %d : nœud actuel ID %d.\n", id, node->data.id);
+
     if (id == node->data.id) {
+        printf("Recherche réussie : ID %d trouvé avec le nom %s.\n", id, node->data.name);
         return &node->data;
     } else if (id < node->data.id) {
+        printf("Recherche : ID %d est plus petit que %d, descente à gauche.\n", id, node->data.id);
         return search_node(node->left, id);
     } else {
+        printf("Recherche : ID %d est plus grand que %d, descente à droite.\n", id, node->data.id);
         return search_node(node->right, id);
     }
 }
 
 Row* search_tree(BinaryTree* tree, int id) {
+    printf("Démarrage de la recherche de l'ID %d dans l'arbre.\n", id);
     return search_node(tree->root, id);
 }
+
 
 // Suppression dans l'arbre
 Node* delete_node(Node* node, int id) {

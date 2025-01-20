@@ -1,3 +1,0 @@
-ID Nom
-1,apple
-2,samsung
