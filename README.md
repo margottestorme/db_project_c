@@ -28,3 +28,26 @@ Commandes supplémentaires :
 Pour compiler le projet : make
 			 ./db_project
 Pour compiler le fichier de tests : gcc -o test tests.c repl.c btree.c
+
+## Exemple
+
+```
+$ ./db_project
+db > create table demo
+Table 'demo' enregistrée dans le fichier 'demo.txt'.
+Table 'demo' sauvegardée et crée avec succès
+db > use demo
+Table 'demo' chargée depuis le fichier 'demo.txt'.
+Table active : 'demo'.
+db > insert 1 margotte
+Ligne insérée : ID=1, Nom=margotte
+Executed.
+db > select
+Contenu de la table (arbre binaire) :
+ID: 1, Nom: margotte
+Executed.
+db > .status
+Table active : 'demo'
+Nombre total de tables : 1
+db > .exit
+```
